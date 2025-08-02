@@ -37,9 +37,82 @@ def load_or_create_index():
 index = load_or_create_index()
 
 # ===============================
-# Routes
+# OpenAPI JSON
 # ===============================
+@app.route("/openapi.json", methods=["GET"])
+def openapi_json():
+    """Trả về cấu hình OpenAPI để Open WebUI nhận diện"""
+    return jsonify({
+        "openapi": "3.0.0",
+        "info": {
+            "title": "BroOffline Backend API",
+            "version": "1.0.0",
+            "description": "API đa chế độ cho BroOffline (Chat LLM & Tài liệu Offline)"
+        },
+        "paths": {
+            "/chat": {
+                "post": {
+                    "summary": "Gửi tin nhắn để chat",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {"type": "string"},
+                                        "mode": {"type": "string", "enum": ["auto", "llm", "docs"]}
+                                    },
+                                    "required": ["message"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Phản hồi từ backend",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "mode": {"type": "string"},
+                                            "response": {"type": "string"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/reload-docs": {
+                "post": {
+                    "summary": "Tải lại tài liệu offline",
+                    "responses": {
+                        "200": {
+                            "description": "Kết quả reload",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "status": {"type": "string"},
+                                            "message": {"type": "string"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })
 
+# ===============================
+# Chat API
+# ===============================
 @app.route("/chat", methods=["POST"])
 def chat():
     """
@@ -75,14 +148,15 @@ def chat():
     else:
         return jsonify({"error": f"Mode '{mode}' không hợp lệ"}), 400
 
-
+# ===============================
+# Reload docs
+# ===============================
 @app.route("/reload-docs", methods=["POST"])
 def reload_docs():
     """Reload lại tài liệu khi có file mới"""
     global index
     index = load_or_create_index()
     return jsonify({"status": "ok", "message": "Tài liệu đã được reload"})
-
 
 # ===============================
 # Main
