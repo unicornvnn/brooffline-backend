@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
-from llama_index.llms.ollama import Ollama
+from llama_index.core.llms.ollama import Ollama
 from llama_index.embeddings.ollama import OllamaEmbedding
 import os
 
@@ -132,34 +132,4 @@ def chat():
     # Tự phát hiện chế độ nếu mode = auto
     if mode == "auto":
         if any(k in user_message.lower() for k in ["tài liệu", "document", "file", "docs"]):
-            mode = "docs"
-        else:
-            mode = "llm"
-
-    if mode == "llm":
-        response = llm.complete(user_message)
-        return jsonify({"mode": "llm", "response": response.text})
-
-    elif mode == "docs":
-        query_engine = index.as_query_engine(llm=llm)
-        response = query_engine.query(user_message)
-        return jsonify({"mode": "docs", "response": str(response)})
-
-    else:
-        return jsonify({"error": f"Mode '{mode}' không hợp lệ"}), 400
-
-# ===============================
-# Reload docs
-# ===============================
-@app.route("/reload-docs", methods=["POST"])
-def reload_docs():
-    """Reload lại tài liệu khi có file mới"""
-    global index
-    index = load_or_create_index()
-    return jsonify({"status": "ok", "message": "Tài liệu đã được reload"})
-
-# ===============================
-# Main
-# ===============================
-if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000)
+            mode =
